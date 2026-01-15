@@ -297,6 +297,39 @@ router.post("/settings/import", express.json(), (req, res) => {
 
 module.exports = router;
 
+const express = require("express");
+const router = express.Router();
+
+// Fake DB
+const users = {
+  "1": { id: "1", email: "admin@site.com", role: "admin" },
+  "2": { id: "2", email: "user@site.com", role: "user" }
+};
+
+/**
+ * Intended feature:
+ * Let users update their own email
+ *
+ * Real bug:
+ * User ID is trusted from request body
+ */
+router.post("/account/update", express.json(), (req, res) => {
+  const { userId, email } = req.body; // attacker-controlled
+
+  const user = users[userId];
+  if (!user) {
+    return res.status(404).json({ error: "user not found" });
+  }
+
+  // ❌ VULNERABLE: no ownership check
+  user.email = email;
+
+  res.json({ status: "updated", user });
+});
+
+module.exports = router;
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`vuln-node-mini listening on http://127.0.0.1:${PORT}`);
