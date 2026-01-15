@@ -382,6 +382,36 @@ router.post("/password/reset/confirm", express.json(), (req, res) => {
 
 module.exports = router;
 
+const express = require("express");
+const ejs = require("ejs");
+const router = express.Router();
+
+/**
+ * Intended feature:
+ * Render a preview message
+ *
+ * Real bug:
+ * User input is rendered as a template
+ */
+router.get("/preview-message", async (req, res) => {
+  const msg = req.query.msg; // attacker-controlled
+
+  if (!msg) {
+    return res.status(400).send("msg required");
+  }
+
+  try {
+    // ❌ VULNERABLE: user input compiled as EJS template
+    const output = await ejs.render(msg, {}, { async: true });
+    res.send(output);
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
+module.exports = router;
+
+
 
 
 const PORT = process.env.PORT || 3000;
