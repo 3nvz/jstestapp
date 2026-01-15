@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>vuln-node-mini</title>
+</head>
+<body>
+  <h1>vuln-node-mini</h1>
+
+  <% if (user) { %>
+    <p>Logged in as: <b><%= user %></b> — <a href="/logout">logout</a></p>
+  <% } else { %>
+    <p><a href="/login">login</a> (very insecure)</p>
+  <% } %>
+
+  <h2>Try endpoints</h2>
+  <ul>
+    <li><a href="/search?q=test">/search?q=...</a> (SQLi)</li>
+    <li><a href="/echo?msg=hello">/echo?msg=...</a> (XSS)</li>
+    <li><a href="/files?path=README.md">/files?path=...</a> (path traversal)</li>
+    <li><a href="/admin/ping?host=127.0.0.1">/admin/ping?host=...</a> (cmd injection; requires login)</li>
+  </ul>
+
+  <h2>Current settings</h2>
+  <pre><%= JSON.stringify(settings, null, 2) %></pre>
+
+  <h2>Update settings</h2>
+  <p>POST JSON to <code>/settings</code></p>
+  <pre>
+curl -s -X POST http://127.0.0.1:3000/settings \
+  -H 'Content-Type: application/json' \
+  -d '{"theme":{"name":"dark"}}'
+  </pre>
+</body>
+</html>

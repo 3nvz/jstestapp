@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>login</title>
+</head>
+<body>
+  <h1>Login</h1>
+
+  <% if (error) { %>
+    <p style="color:red"><%= error %></p>
+  <% } %>
+
+  <form method="POST" action="/login">
+    <label>Username <input name="username" /></label><br/>
+    <label>Password <input name="password" type="password" /></label><br/>
+    <button type="submit">Login</button>
+  </form>
+
+  <p>Seeded users (intentionally weak):</p>
+  <ul>
+    <li>alice / alice123</li>
+    <li>admin / admin</li>
+  </ul>
+
+  <p><a href="/">home</a></p>
+</body>
+</html>

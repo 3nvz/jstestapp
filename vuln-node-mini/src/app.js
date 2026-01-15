@@ -1,0 +1,123 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const path = require('path');
+const { exec } = require('child_process');
+
+const { openDb, initDb } = require('./db');
+const { deepMerge, isLoggedIn } = require('./utils');
+
+initDb();
+
+const app = express();
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '..', 'views'));
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser('hardcoded-session-secret')); // VULNERABLE: hardcoded secret
+app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+
+// Global app settings object (intentionally mergeable)
+const appSettings = {
+  theme: { name: 'light' },
+  security: { enableCsp: false }
+};
+
+app.get('/', (req, res) => {
+  res.render('index', {
+    user: req.cookies.user || null,
+    settings: appSettings
+  });
+});
+
+// VULNERABLE: reflected XSS (msg is rendered unescaped in template)
+app.get('/echo', (req, res) => {
+  res.render('echo', { msg: req.query.msg || '' });
+});
+
+// VULNERABLE: SQL injection via string concatenation
+app.get('/search', (req, res) => {
+  const q = req.query.q || '';
+  const db = openDb();
+
+  // INTENTIONAL BUG: string concatenation creates SQLi
+  const sql = "SELECT id, owner, title, body FROM notes WHERE title LIKE '%" + q + "%'";
+
+  db.all(sql, (err, rows) => {
+    db.close();
+    if (err) {
+      return res.status(500).send('DB error: ' + err.message);
+    }
+    res.render('search', { q, rows });
+  });
+});
+
+// VULNERABLE: command injection
+app.get('/admin/ping', (req, res) => {
+  if (!isLoggedIn(req)) {
+    return res.status(401).send('Login required');
+  }
+
+  const host = req.query.host || '127.0.0.1';
+
+  // INTENTIONAL BUG: command injection (no sanitization)
+  exec('ping -c 1 ' + host, { timeout: 3000 }, (err, stdout, stderr) => {
+    const out = (stdout || '') + (stderr || '');
+    res.type('text/plain').send(out || (err ? String(err) : 'no output'));
+  });
+});
+
+// VULNERABLE: path traversal / arbitrary file read
+app.get('/files', (req, res) => {
+  const p = req.query.path || 'README.md';
+
+  // INTENTIONAL BUG: sendFile with user-controlled path
+  const abs = path.join(__dirname, '..', p);
+  res.sendFile(abs, (err) => {
+    if (err) res.status(404).send('Not found');
+  });
+});
+
+// Extremely weak "login" just to gate /admin/ping
+app.get('/login', (req, res) => {
+  res.render('login', { error: null });
+});
+
+// VULNERABLE: weak auth, plain text passwords, no rate limiting, etc.
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const db = openDb();
+
+  // INTENTIONAL BUG: SQL injection in login as well
+  const sql = "SELECT username,is_admin FROM users WHERE username='" + (username || '') + "' AND password='" + (password || '') + "'";
+
+  db.get(sql, (err, row) => {
+    db.close();
+    if (err || !row) {
+      return res.status(401).render('login', { error: 'Invalid credentials' });
+    }
+
+    // INTENTIONAL BUG: unsigned cookie trust
+    res.cookie('user', row.username);
+    res.redirect('/');
+  });
+});
+
+// VULNERABLE: prototype pollution via deepMerge into appSettings
+app.post('/settings', (req, res) => {
+  // Accept arbitrary JSON and merge into live settings
+  const incoming = req.body || {};
+  deepMerge(appSettings, incoming);
+  res.json({ ok: true, settings: appSettings });
+});
+
+app.get('/logout', (req, res) => {
+  res.clearCookie('user');
+  res.redirect('/');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`vuln-node-mini listening on http://127.0.0.1:${PORT}`);
+});

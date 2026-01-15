@@ -1,0 +1,17 @@
+{
+  "name": "vuln-node-mini",
+  "version": "1.0.0",
+  "description": "Intentionally vulnerable mini Node.js codebase for local security testing.",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node src/app.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  }
+}

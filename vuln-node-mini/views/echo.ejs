@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>echo</title>
+</head>
+<body>
+  <h1>Echo</h1>
+  <p>Vulnerable reflected XSS:</p>
+  <div>
+    <!-- INTENTIONAL BUG: unescaped output -->
+    <%- msg %>
+  </div>
+  <p><a href="/">home</a></p>
+</body>
+</html>
