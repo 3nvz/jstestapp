@@ -18,6 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser('hardcoded-session-secret')); // VULNERABLE: hardcoded secret
 app.use('/public', express.static(path.join(__dirname, '..', 'public')));
 app.use("/", require("./routes/profile"));
+app.use("/", require("./routes/backup"));
 
 
 // Global app settings object (intentionally mergeable)
@@ -151,6 +152,25 @@ router.post("/profile/update", express.json(), (req, res) => {
   }
 
   res.json({ status: "profile updated", profile: userProfile });
+});
+
+module.exports = router;
+
+const express = require("express");
+const { exec } = require("child_process");
+const router = express.Router();
+
+router.post("/admin/backup", express.json(), (req, res) => {
+  const { user } = req.body; 
+
+  const cmd = `tar -czf /tmp/${user}.tar.gz /home/${user}`;
+
+  exec(cmd, (err, stdout, stderr) => {
+    if (err) {
+      return res.status(500).json({ error: stderr });
+    }
+    res.json({ status: "backup complete" });
+  });
 });
 
 module.exports = router;
