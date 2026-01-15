@@ -271,6 +271,32 @@ router.get("/admin/dashboard", (req, res) => {
 
 module.exports = router;
 
+const express = require("express");
+const serialize = require("node-serialize");
+const router = express.Router();
+
+/**
+ * Intended feature:
+ * Import user settings from JSON
+ *
+ * Real bug:
+ * Unsafe deserialization of attacker-controlled input
+ */
+router.post("/settings/import", express.json(), (req, res) => {
+  const { data } = req.body; // attacker-controlled string
+
+  try {
+    // ❌ VULNERABLE
+    const obj = serialize.unserialize(data);
+
+    res.json({ status: "imported", settings: obj });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+module.exports = router;
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`vuln-node-mini listening on http://127.0.0.1:${PORT}`);
