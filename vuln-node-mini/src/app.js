@@ -17,6 +17,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser('hardcoded-session-secret')); // VULNERABLE: hardcoded secret
 app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+app.use("/", require("./routes/profile"));
+
 
 // Global app settings object (intentionally mergeable)
 const appSettings = {
@@ -116,6 +118,42 @@ app.get('/logout', (req, res) => {
   res.clearCookie('user');
   res.redirect('/');
 });
+
+// routes/profile.js
+const express = require("express");
+const router = express.Router();
+
+let userProfile = {
+  username: "admin",
+  role: "user",
+  isAdmin: false
+};
+
+
+function merge(target, source) {
+  for (const key in source) {
+    if (typeof source[key] === "object" && source[key] !== null) {
+      target[key] = target[key] || {};
+      merge(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+}
+
+router.post("/profile/update", express.json(), (req, res) => {
+  const input = req.body; 
+
+  merge(userProfile, input);
+
+  if (userProfile.isAdmin === true) {
+    return res.json({ status: "admin access granted" });
+  }
+
+  res.json({ status: "profile updated", profile: userProfile });
+});
+
+module.exports = router;
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
