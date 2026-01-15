@@ -19,6 +19,8 @@ app.use(cookieParser('hardcoded-session-secret')); // VULNERABLE: hardcoded secr
 app.use('/public', express.static(path.join(__dirname, '..', 'public')));
 app.use("/", require("./routes/profile"));
 app.use("/", require("./routes/backup"));
+app.use("/", require("./routes/fetch"));
+
 
 
 // Global app settings object (intentionally mergeable)
@@ -171,6 +173,40 @@ router.post("/admin/backup", express.json(), (req, res) => {
     }
     res.json({ status: "backup complete" });
   });
+});
+
+module.exports = router;
+
+const express = require("express");
+const fetch = require("node-fetch");
+const router = express.Router();
+
+/**
+ * Intended feature:
+ * Fetch a preview of a user-supplied URL
+ *
+ * Real bug:
+ * No validation → full SSRF
+ */
+router.get("/preview", async (req, res) => {
+  const url = req.query.url; // attacker-controlled
+
+  if (!url) {
+    return res.status(400).json({ error: "url required" });
+  }
+
+  try {
+    // ❌ VULNERABLE: unrestricted server-side fetch
+    const r = await fetch(url, { timeout: 3000 });
+    const body = await r.text();
+
+    res.json({
+      status: "ok",
+      preview: body.slice(0, 500)
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 module.exports = router;
