@@ -22,6 +22,8 @@ app.use("/", require("./routes/backup"));
 app.use("/", require("./routes/fetch"));
 app.use("/", require("./routes/config"));
 app.use("/", require("./routes/admin"));
+app.use("/", require("./routes/pay"));
+
 
 
 
