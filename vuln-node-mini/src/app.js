@@ -238,6 +238,39 @@ router.get("/download", (req, res) => {
 
 module.exports = router;
 
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const router = express.Router();
+
+// ❌ Weak / incorrect JWT verification
+function verifyToken(token) {
+  // BUG: does not restrict algorithm
+  return jwt.verify(token, "secret"); 
+}
+
+router.get("/admin/dashboard", (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    return res.status(401).json({ error: "missing token" });
+  }
+
+  const token = auth.replace("Bearer ", "");
+
+  try {
+    const payload = verifyToken(token);
+
+    if (payload.role !== "admin") {
+      return res.status(403).json({ error: "forbidden" });
+    }
+
+    res.json({ status: "welcome admin", secrets: "🔥" });
+  } catch (e) {
+    res.status(401).json({ error: "invalid token" });
+  }
+});
+
+module.exports = router;
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`vuln-node-mini listening on http://127.0.0.1:${PORT}`);
