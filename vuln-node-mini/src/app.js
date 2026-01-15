@@ -329,6 +329,60 @@ router.post("/account/update", express.json(), (req, res) => {
 
 module.exports = router;
 
+const express = require("express");
+const crypto = require("crypto");
+const router = express.Router();
+
+// Fake DB
+const users = {
+  "admin@site.com": { password: "hashed_pw", resetToken: null }
+};
+
+/**
+ * Intended feature:
+ * Send password reset link
+ *
+ * Real bug:
+ * Token is returned in API response
+ */
+router.post("/password/reset", express.json(), (req, res) => {
+  const { email } = req.body; // attacker-controlled
+
+  const user = users[email];
+  if (!user) {
+    return res.json({ status: "ok" }); // hide existence
+  }
+
+  const token = crypto.randomBytes(16).toString("hex");
+  user.resetToken = token;
+
+  // ❌ VULNERABLE: token disclosed to client
+  res.json({
+    status: "reset sent",
+    resetToken: token
+  });
+});
+
+/**
+ * Complete reset
+ */
+router.post("/password/reset/confirm", express.json(), (req, res) => {
+  const { token, newPassword } = req.body;
+
+  const user = Object.values(users).find(u => u.resetToken === token);
+  if (!user) {
+    return res.status(400).json({ error: "invalid token" });
+  }
+
+  user.password = newPassword;
+  user.resetToken = null;
+
+  res.json({ status: "password updated" });
+});
+
+module.exports = router;
+
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
