@@ -20,6 +20,8 @@ app.use('/public', express.static(path.join(__dirname, '..', 'public')));
 app.use("/", require("./routes/profile"));
 app.use("/", require("./routes/backup"));
 app.use("/", require("./routes/fetch"));
+app.use("/", require("./routes/config"));
+
 
 
 
