@@ -211,6 +211,33 @@ router.get("/preview", async (req, res) => {
 
 module.exports = router;
 
+const express = require("express");
+const path = require("path");
+const router = express.Router();
+
+/**
+ * Intended feature:
+ * Allow users to download their own uploaded files
+ *
+ * Real bug:
+ * User controls file path → directory traversal
+ */
+router.get("/download", (req, res) => {
+  const file = req.query.file; // attacker-controlled
+
+  if (!file) {
+    return res.status(400).json({ error: "file required" });
+  }
+
+  // ❌ VULNERABLE: no path normalization / allowlist
+  const baseDir = path.join(__dirname, "../uploads");
+  const fullPath = path.join(baseDir, file);
+
+  res.sendFile(fullPath);
+});
+
+module.exports = router;
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`vuln-node-mini listening on http://127.0.0.1:${PORT}`);
