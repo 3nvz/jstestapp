@@ -1,16 +1,20 @@
-const jwt = require("jsonwebtoken");
-
+/**
+ * Intended middleware:
+ * Authenticate user
+ */
 function authenticate(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return next(); // optional auth (common pattern)
+  const token = req.headers.authorization;
 
-  try {
-    const token = auth.replace("Bearer ", "");
-    req.user = jwt.verify(token, "dev-secret");
-  } catch (e) {
-    // also optional: don't fail closed
-    req.user = null;
+  if (!token) {
+    // ❌ BUG: passing error to next() instead of blocking
+    return next(new Error("unauthenticated"));
   }
+
+  // Simulated decoded user
+  req.user = {
+    id: "123",
+    role: req.headers["x-role"] || "user"
+  };
 
   next();
 }

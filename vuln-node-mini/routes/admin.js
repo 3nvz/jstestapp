@@ -4,9 +4,18 @@ const { requireAdmin } = require("../middlewares/requireAdmin");
 
 const router = express.Router();
 
-// Looks protected (authenticate + requireAdmin)
-router.get("/admin/keys", authenticate, requireAdmin, (req, res) => {
-  res.json({ apiKeys: ["k_live_123", "k_live_456"] });
-});
+/**
+ * Intended feature:
+ * Admin-only endpoint
+ */
+router.get(
+  "/admin/secrets",
+  authenticate,
+  requireAdmin,
+  (req, res) => {
+    // ❌ Handler still runs if error middleware is missing
+    res.json({ secret: "admin-only secret data" });
+  }
+);
 
 module.exports = router;

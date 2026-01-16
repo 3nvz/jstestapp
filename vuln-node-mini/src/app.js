@@ -74,6 +74,21 @@ app.get('/admin/ping', (req, res) => {
     return res.status(401).send('Login required');
   }
 
+  const express = require("express");
+const adminRoutes = require("./routes/admin");
+
+const app = express();
+
+app.use("/", adminRoutes);
+
+// ❌ BUG: missing error-handling middleware
+// Express will ignore errors passed via next(err)
+
+app.listen(3000, () => {
+  console.log("Server running on 3000");
+});
+
+
   const host = req.query.host || '127.0.0.1';
 
   // INTENTIONAL BUG: command injection (no sanitization)
