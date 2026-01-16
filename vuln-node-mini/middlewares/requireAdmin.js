@@ -1,9 +1,15 @@
 /**
  * Intended middleware:
- * Require admin role
+ * Protect admin routes
  */
 function requireAdmin(req, res, next) {
-  if (!req.user || req.user.role !== "admin") {
+  // Simulated authenticated user
+  req.user = {
+    id: "123",
+    role: req.headers["x-role"] || "user"
+  };
+
+  if (req.user.role !== "admin") {
     return res.status(403).json({ error: "forbidden" });
   }
 

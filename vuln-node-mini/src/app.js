@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const { exec } = require('child_process');
+const express = require("express");
+const { requireAdmin } = require("./middlewares/requireAdmin");
+const adminRoutes = require("./routes/adminRoutes");
 
 const { openDb, initDb } = require('./db');
 const { deepMerge, isLoggedIn } = require('./utils');
@@ -416,6 +419,16 @@ router.get("/preview-message", async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+/**
+ * ❌ BUG:
+ * Middleware only applies to EXACT `/admin`
+ * NOT `/admin/*`
+ */
+app.use("/admin", requireAdmin);
+app.use("/admin-panel", adminRoutes); // ❌ unprotected alias
 
 
 
