@@ -25,7 +25,7 @@ app.use("/", require("./routes/admin"));
 app.use("/", require("./routes/pay"));
 app.use("/", require("./routes/oauth"));
 app.use(authenticate);
-
+app.use("/", require("./routes/admin"));
 
 
 

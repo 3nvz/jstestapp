@@ -1,13 +1,22 @@
 const express = require("express");
+const { authenticate } = require("../middlewares/auth");
 const { requireRole } = require("../middlewares/requireRole");
+
 const router = express.Router();
 
-// ⬇️ decorator-style protection
+/**
+ * Intended feature:
+ * Admin-only endpoint
+ */
 router.get(
-  "/admin/dashboard",
-  requireRole("admin"),
+  "/admin/config",
+  authenticate,
+  requireRole("admin"), // ✅ looks protected
   (req, res) => {
-    res.json({ secrets: "admin-only data" });
+    res.json({
+      status: "ok",
+      secretConfig: "admin-only configuration"
+    });
   }
 );
 

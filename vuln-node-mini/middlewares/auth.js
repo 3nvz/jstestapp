@@ -1,15 +1,14 @@
-const jwt = require("jsonwebtoken");
-
+/**
+ * Simple auth middleware
+ */
 function authenticate(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ error: "unauthenticated" });
+  // Simulate decoded JWT
+  req.user = {
+    id: "123",
+    role: req.headers["x-role"] || "user" // attacker-controlled for demo
+  };
 
-  try {
-    req.user = jwt.verify(auth.replace("Bearer ", ""), "secret");
-    next();
-  } catch {
-    res.status(401).json({ error: "invalid token" });
-  }
+  next();
 }
 
 module.exports = { authenticate };
