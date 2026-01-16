@@ -88,6 +88,31 @@ app.listen(3000, () => {
   console.log("Server running on 3000");
 });
 
+const express = require("express");
+const adminRoutes = require("./routes/admin");
+
+const app = express();
+
+// ❌ CORS enabled globally
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Role");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+app.use("/", adminRoutes);
+
+app.listen(3000, () => {
+  console.log("Server running on 3000");
+});
+
+
 
   const host = req.query.host || '127.0.0.1';
 

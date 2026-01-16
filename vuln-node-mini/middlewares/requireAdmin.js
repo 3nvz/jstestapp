@@ -3,8 +3,15 @@
  * Require admin role
  */
 function requireAdmin(req, res, next) {
-  if (!req.user || req.user.role !== "admin") {
-    return next(new Error("forbidden")); // ❌ BUG: should block, not pass error
+  // ❌ BUG: allow preflight requests through
+  if (req.method === "OPTIONS") {
+    return next();
+  }
+
+  const role = req.headers["x-role"]; // simplified auth context
+
+  if (role !== "admin") {
+    return res.status(403).json({ error: "forbidden" });
   }
 
   next();

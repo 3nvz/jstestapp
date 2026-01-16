@@ -1,20 +1,19 @@
 const express = require("express");
-const { authenticate } = require("../middlewares/authenticate");
 const { requireAdmin } = require("../middlewares/requireAdmin");
 
 const router = express.Router();
 
 /**
- * Intended feature:
  * Admin-only endpoint
  */
-router.get(
-  "/admin/secrets",
-  authenticate,
+router.post(
+  "/admin/export",
   requireAdmin,
   (req, res) => {
-    // ❌ Handler still runs if error middleware is missing
-    res.json({ secret: "admin-only secret data" });
+    res.json({
+      status: "ok",
+      data: "sensitive export data"
+    });
   }
 );
 
